@@ -4,14 +4,14 @@
     "description": "This is a template repository for the first assignment in BVD 103 at McMaster Continuing Education.",
     "main": "index.js",
     "scripts": {
-        "start-server": "ts-node src/server.ts"
+        "start-server": "tsx src/server.ts"
     },
     "keywords": [],
     "author": "",
     "license": "ISC",
     "dependencies": {
         "@koa/cors": "^5.0.0",
-        "koa": "^2.15.3",
+        "koa": "^2.16.1",
         "koa-bodyparser": "^4.4.1",
         "koa-qs": "^3.0.0",
         "koa-router": "^13.0.1",
@@ -26,6 +26,6 @@
         "@types/koa-router": "^7.4.8",
         "@types/node": "^22.5.5",
         "ts-node": "^10.9.2",
-        "typescript": "^5.6.2"
+        "typescript": "^5.8.3"
     }
 }
