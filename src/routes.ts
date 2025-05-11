@@ -1,39 +1,47 @@
 import Router from 'koa-router';
-import adapter from '../adapter';
+import books from './../mcmasteful-book-list.json'; 
+
 const router = new Router();
 
 router.get('/books', async (ctx) => {
-    const filters = ctx.query.filters as Array<{ from?: number, to?: number }>;
-    // TODO: validate filters
+    const filters = ctx.query.filters as Array<{ from?: number, to?: number }> | undefined;
+
     try {
-        const books = await adapter.listBooks(filters);
-        ctx.body = books;
-    } catch (error) {
-        ctx.status = 500;
-        ctx.body = { error: `Failed to fetch books due to: ${error}` };
-    }
-});
-
-function validateFilters(filters: any): boolean {
-    // Check if filters exist and are an array
-    if (!filters || !Array.isArray(filters)) {
-        return false;
-    }
-
-    // Check each filter object in the array
-    return filters.every(filter => {
-        const from = parseFloat(filter.from);
-        const to = parseFloat(filter.to);
-
-        // Validate that 'from' and 'to' are numbers
-        if (isNaN(from) || isNaN(to)) {
-            return false;
+        // Validate filters if used
+        if (filters && filters.length > 0) {
+            const isValid = filters.every(filter => {
+                const from = filter.from;
+                const to = filter.to;
+                return (
+                    (from === undefined || !isNaN(Number(from))) &&
+                    (to === undefined || !isNaN(Number(to)))
+                );
+            });
+            // If user tries NaN input
+            if (!isValid) {
+                ctx.status = 400;
+                ctx.body = { error: "Invalid filters: 'from' and 'to' must be valid numbers." };
+                return;
+            }
         }
 
-        // Validate that 'from' is less than or equal to 'to'
-        return from <= to;
-    });
-}
+        const filteredBooks = books.filter(book => {
+            if (!filters || filters.length === 0) {
+                return true;
+            }
 
+            return filters.every(filter => {
+                const from = filter.from !== undefined ? Number(filter.from) : -Infinity;
+                const to = filter.to !== undefined ? Number(filter.to) : Infinity;
+                return book.price >= from && book.price <= to;
+            });
+        });
+
+        ctx.body = filteredBooks;
+    } catch (error) {
+        ctx.status = 500;
+        ctx.body = { error: `Failed to fetch books due to: ${(error as Error).message}` };
+    }
+});
 
 export default router;
