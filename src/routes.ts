@@ -1,8 +1,95 @@
-import Router from 'koa-router';
-import books from './../mcmasteful-book-list.json'; 
+import Router from 'koa-router'; 
+import { Book, booksArray } from '../adapter/assignment-2';
+import { v4 as uuidv4 } from 'uuid'; 
+import assignment2Functions from '../adapter/assignment-2';
+
+
+const { createOrUpdateBook } = assignment2Functions;
 
 const router = new Router();
 
+//Create a book
+router.post('/books', async (ctx) => {
+    try {
+        const { name, author, description, price, image } = ctx.request.body as Book 
+        //Validate user inputs
+         if(!name || !author || !description || !price || !image) {
+            ctx.status = 400;
+            return ctx.body = { error: 'All fields are required' };
+        }
+
+        const newBook: Book = {
+            id: uuidv4(), //I used uuids because we did in BDV102
+            name,
+            author,
+            description,
+            price: Number(price),
+            image
+        }
+
+        await createOrUpdateBook(newBook);
+        ctx.status = 201;
+        ctx.body = { message: 'New book created successfully', book: newBook };
+
+    } catch (error) {
+        ctx.status = 500;
+        console.error('An error occurred:', error);
+        ctx.body = { error: 'Server error, please try again' }
+    }
+})
+
+
+//Update a book
+router.put('/books/:id', async (ctx) => {
+    try {
+        const { name, author, description, price, image } = ctx.request.body as Book;
+        //Validate user inputs
+         if(!name || !author || !description || !price || !image) {
+            ctx.status = 400;
+            return ctx.body = { error: 'All fields are required' };
+        }
+        
+        //Find exisiting book by uuid
+        const { id } = ctx.params;
+        const existingIndex = booksArray.findIndex((b) => b.id === id);
+        
+        if (existingIndex === -1) {
+            ctx.status = 404;
+            return ctx.body = { error: 'Book not found' };
+        }
+
+        const updatedBook: Book = {
+            id,
+            name,
+            author,
+            description,
+            price: Number(price),
+            image,
+        };
+
+        await createOrUpdateBook(updatedBook);
+        ctx.status = 200;
+        ctx.body = { message: 'Book updated successfully', book: updatedBook };
+
+    } catch (error) {
+        ctx.status = 500;
+        console.error('An error occurred:', error);
+        ctx.body = { error: 'Server error, please try again' };
+    }
+});
+
+//Delete
+router.delete('/books/:id', async (ctx) => {
+    try {
+
+    } catch (error) {
+        ctx.status = 500;
+        console.error('An error occurred:', error);
+        ctx.body = { error: 'Server error, please try again' };
+    }
+})
+
+//Read
 router.get('/books', async (ctx) => {
     const filters = ctx.query.filters as Array<{ from?: number, to?: number }> | undefined;
 
@@ -25,7 +112,7 @@ router.get('/books', async (ctx) => {
             }
         }
 
-        const filteredBooks = books.filter(book => {
+        const filteredBooks = booksArray.filter(book => {
             if (!filters || filters.length === 0) {
                 return true;
             }
@@ -40,7 +127,8 @@ router.get('/books', async (ctx) => {
         ctx.body = filteredBooks;
     } catch (error) {
         ctx.status = 500;
-        ctx.body = { error: `Failed to fetch books due to: ${(error as Error).message}` };
+        console.error('An error occurred:', error);
+        ctx.body = { error: 'Server error, please try again' };
     }
 });
 
