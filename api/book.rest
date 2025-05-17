@@ -3,3 +3,28 @@ GET http://localhost:3000/books
 
 ###
 GET http://localhost:3000/books?filters[0][from]=20&filters[0][to]=40
+
+
+###
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "name": "Jimmy Book",
+  "author": "Jimmy B",
+  "description": "A new book.",
+  "price": 39.99,
+  "image": "url"
+}
+
+###
+PUT http://localhost:3000/books/dc4ea0b6-92df-4922-8738-f6a2967906a2
+Content-Type: application/json
+
+{
+  "name": "Updated Jimmy book",
+  "author": "Jimmy B",
+  "description": "An updated book.",
+  "price": 49.99,
+  "image": "url"
+}
