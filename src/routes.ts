@@ -2,9 +2,10 @@ import Router from 'koa-router';
 import { Book, booksArray } from '../adapter/assignment-2';
 import { v4 as uuidv4 } from 'uuid'; 
 import assignment2Functions from '../adapter/assignment-2';
+import { error } from 'console';
 
 
-const { createOrUpdateBook } = assignment2Functions;
+const { createOrUpdateBook, removeBook } = assignment2Functions;
 
 const router = new Router();
 
@@ -81,6 +82,17 @@ router.put('/books/:id', async (ctx) => {
 //Delete
 router.delete('/books/:id', async (ctx) => {
     try {
+        const { id } = ctx.params;
+        const existingIndex = booksArray.findIndex((b) => b.id === id);
+
+        if (existingIndex === -1) {
+            ctx.status = 404;
+            return ctx.body = { error: 'Book not found' };
+        }
+
+        await removeBook(id);
+        ctx.status = 200;
+        ctx.body = { message: 'Book deleted successfully' };
 
     } catch (error) {
         ctx.status = 500;
