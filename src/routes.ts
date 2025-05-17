@@ -19,6 +19,12 @@ router.post('/books', async (ctx) => {
             return ctx.body = { error: 'All fields are required' };
         }
 
+        //Extra validation for price
+        if(isNaN(price)  || price < 0) {
+            ctx.status = 400;
+            return ctx.body = { error: 'Price must be a positive number' }
+        }
+
         const newBook: Book = {
             id: uuidv4(), //I used uuids because we did in BDV102
             name,
@@ -50,6 +56,11 @@ router.put('/books/:id', async (ctx) => {
             return ctx.body = { error: 'All fields are required' };
         }
         
+        //Extra validation for price
+        if(isNaN(price)  || price < 0) {
+            ctx.status = 400;
+            return ctx.body = { error: 'Price must be a positive number' }
+        }
         //Find exisiting book by uuid
         const { id } = ctx.params;
         const existingIndex = booksArray.findIndex((b) => b.id === id);
