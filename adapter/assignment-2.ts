@@ -39,7 +39,8 @@ async function createOrUpdateBook(book: Book): Promise<BookID> {
 }
 
 async function removeBook(book: BookID): Promise<void> {
-    throw new Error("Todo")
+   const bookIndex = booksArray.findIndex(b => b.id === book);
+   booksArray.splice(bookIndex, 1); 
 }
 
 const assignment = "assignment-2";
