@@ -17,6 +17,7 @@
         "koa-router": "^13.0.1",
         "koa-zod-router": "^2.3.0",
         "tsx": "^4.19.1",
+        "uuid": "^11.1.0",
         "zod": "^3.24.4"
     },
     "devDependencies": {
@@ -25,6 +26,7 @@
         "@types/koa-qs": "^2.0.3",
         "@types/koa-router": "^7.4.8",
         "@types/node": "^22.5.5",
+        "@types/uuid": "^10.0.0",
         "ts-node": "^10.9.2",
         "typescript": "^5.8.3"
     }
