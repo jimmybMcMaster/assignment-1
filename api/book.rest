@@ -18,7 +18,7 @@ Content-Type: application/json
 }
 
 ###
-PUT http://localhost:3000/books/dc4ea0b6-92df-4922-8738-f6a2967906a2
+PUT http://localhost:3000/books/872296b5-69ee-4607-9b03-87e3a9169f37
 Content-Type: application/json
 
 {
@@ -28,3 +28,6 @@ Content-Type: application/json
   "price": 49.99,
   "image": "url"
 }
+
+###
+DELETE http://localhost:3000/books/872296b5-69ee-4607-9b03-87e3a9169f37
