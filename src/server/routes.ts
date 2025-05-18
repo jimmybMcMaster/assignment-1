@@ -87,7 +87,7 @@ router.put('/books/:id', async (ctx) => {
     }
 });
 
-//Delete
+//Delete a book
 router.delete('/books/:id', async (ctx) => {
     try {
         const { id } = ctx.params;
