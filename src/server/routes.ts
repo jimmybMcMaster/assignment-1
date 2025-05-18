@@ -22,10 +22,10 @@ router.post('/books', async (ctx) => {
       ctx.body = { error: 'All fields are required' };
       return;
     }
-    // Extra validation for price
-    if (isNaN(price) || price < 0) {
+    // Extra validation for price --> proper decimal format and above 0
+    if (typeof price !== 'number' || price < 0 || Number(price.toFixed(2)) !== price) {
       ctx.status = 400;
-      ctx.body = { error: 'Price cannot be below 0' };
+      ctx.body = { error: 'Price must be a positive number to 2 decimal places' };
       return;
     }
 
@@ -61,9 +61,10 @@ router.put('/books/:id', async (ctx) => {
       return;
     }
 
-    if (isNaN(price) || price < 0) {
+    // Extra validation for price --> proper decimal format and above 0
+    if (typeof price !== 'number' || price < 0 || Number(price.toFixed(2)) !== price) {
       ctx.status = 400;
-      ctx.body = { error: 'Price cannot be below 0' };
+      ctx.body = { error: 'Price must be a positive number to 2 decimal places' };
       return;
     }
 
