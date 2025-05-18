@@ -1,74 +1,75 @@
-import  connectToMongo  from "../src/server/mongo";
-
 export type BookID = string;
 
 export interface Book {
-    id?: BookID,
-    name: string,
-    author: string,
-    description: string,
-    price: number,
-    image: string,
-};
-
-async function getBooksDatabase() {
-  const db = await connectToMongo();
-  return db.collection<Book>("books");
+  id?: BookID;
+  name: string;
+  author: string;
+  description: string;
+  price: number;
+  image: string;
 }
 
-async function listBooks(filters?: { from?: number; to?: number }[]): Promise<Book[]> {
-  const collection = await getBooksDatabase(); //Get the book collection 
+async function listBooks(filters?: Array<{ from?: number; to?: number }>): Promise<Book[]> {
+  let url = 'http://localhost:3000/books';
 
-  let query = {};
-
-  if (filters?.length) {
-    const conditions = filters.map(({ from, to }) => {
-      const priceQuery: any = {};
-      if (from !== undefined) priceQuery.$gte = from;
-      if (to !== undefined) priceQuery.$lte = to;
-      return { price: priceQuery };
+  // If filters exist, append them to the URL
+  if (filters && filters.length > 0) {
+    const params = new URLSearchParams();
+    filters.forEach((filter) => {
+      if (filter.from !== undefined) {
+        params.append('from', String(filter.from)); 
+      }
+      if (filter.to !== undefined) {
+        params.append('to', String(filter.to)); 
+      }
     });
-
-    query = { $and: conditions }; // Combine all conditions with $and
+    url += `?${params.toString()}`;
   }
 
-  return await collection.find(query).toArray(); 
-}
-
-async function createOrUpdateBook(book: Book): Promise<BookID> {
-  const collection = await getBooksDatabase();
-
-  const existingBook = await collection.findOne({ id: book.id });
-
-  if (existingBook) {
-    // Update the existing book
-    await collection.updateOne(
-      { id: book.id },
-      { $set: book }
-    );
-  } else {
-    // Insert new book
-    await collection.insertOne(book);
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error('Failed to fetch books');
   }
 
-  return book.id as BookID;
+  return (await response.json()) as Book[];
 }
 
-async function removeBook(book: BookID): Promise<void> {
-    const collection = await getBooksDatabase();
+async function createOrUpdateBook(book: Book): Promise<Book> {
+  const hasId = Boolean(book.id);
+  const url = hasId ? `http://localhost:3000/books/${book.id}` : 'http://localhost:3000/books';
+  const method = hasId ? 'PUT' : 'POST';
 
-    const existingBook = await collection.findOne({ id: book });
+  const response = await fetch(url, {
+    method,
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(book),
+  });
 
-    if(existingBook) {
-        await collection.deleteOne({ id: book });
-    }
+  if (!response.ok) {
+    throw new Error('Failed to create or update book');
+  }
+
+  const data: any = await response.json();
+  return data.book;
+}
+
+async function removeBook(bookId: BookID): Promise<void> {
+  const response = await fetch(`http://localhost:3000/books/${bookId}`, {
+    method: 'DELETE',
+  });
+
+  if (!response.ok) {
+    throw new Error('Failed to remove book');
+  }
 }
 
 const assignment = "assignment-2";
 
 export default {
-    assignment,
-    createOrUpdateBook,
-    removeBook,
-    listBooks
+  assignment,
+  createOrUpdateBook,
+  removeBook,
+  listBooks,
 };
+
+
