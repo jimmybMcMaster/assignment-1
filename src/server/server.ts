@@ -8,15 +8,13 @@ import connectToMongo from './mongo';
 const app = new Koa();
 koaQs(app);  
 
-app.use(cors({
-    origin: 'http://localhost:9080',
-}));
+app.use(cors());
 app.use(bodyParser());
 app.use(routes.allowedMethods());
 app.use(routes.routes());
 
 const PORT = 3000;
-
+//Get mongo to connect first
 async function startServer() {
     try {
         await connectToMongo();
