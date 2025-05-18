@@ -1,6 +1,4 @@
-import assignment1 from "./assignment-1";
-import books from'./../mcmasteful-book-list.json';
-import { v4 as uuidv4 } from 'uuid';
+import  connectToMongo  from "../src/server/mongo";
 
 export type BookID = string;
 
@@ -13,34 +11,57 @@ export interface Book {
     image: string,
 };
 
-export const booksArray: Book[] = books; //Clears typescript id doesn't exist error
+async function getBooksDatabase() {
+  const db = await connectToMongo();
+  return db.collection<Book>("books");
+}
 
-booksArray.forEach((book) => {
-    if (!book.id) {
-        book.id = uuidv4(); // Assign a uuid if missing
-    }
-});
+async function listBooks(filters?: { from?: number; to?: number }[]): Promise<Book[]> {
+  const collection = await getBooksDatabase(); //Get the book collection 
 
-async function listBooks(filters?: Array<{from?: number, to?: number}>) : Promise<Book[]>{
-    return assignment1.listBooks(filters);
+  let query = {};
+
+  if (filters?.length) {
+    const conditions = filters.map(({ from, to }) => {
+      const priceQuery: any = {};
+      if (from !== undefined) priceQuery.$gte = from;
+      if (to !== undefined) priceQuery.$lte = to;
+      return { price: priceQuery };
+    });
+
+    query = { $and: conditions }; // Combine all conditions with $and
+  }
+
+  return await collection.find(query).toArray(); 
 }
 
 async function createOrUpdateBook(book: Book): Promise<BookID> {
-   const bookIndex = booksArray.findIndex(b => b.id === book.id);
-    
-   if (bookIndex !== -1) {
-        // Update the existing book
-        booksArray[bookIndex] = { ...booksArray[bookIndex], ...book };
-    } else {
-        // Add new book
-        booksArray.push(book);
-    }
-    return book.id as BookID;
+  const collection = await getBooksDatabase();
+
+  const existingBook = await collection.findOne({ id: book.id });
+
+  if (existingBook) {
+    // Update the existing book
+    await collection.updateOne(
+      { id: book.id },
+      { $set: book }
+    );
+  } else {
+    // Insert new book
+    await collection.insertOne(book);
+  }
+
+  return book.id as BookID;
 }
 
 async function removeBook(book: BookID): Promise<void> {
-   const bookIndex = booksArray.findIndex(b => b.id === book);
-   booksArray.splice(bookIndex, 1); 
+    const collection = await getBooksDatabase();
+
+    const existingBook = await collection.findOne({ id: book });
+
+    if(existingBook) {
+        await collection.deleteOne({ id: book });
+    }
 }
 
 const assignment = "assignment-2";
