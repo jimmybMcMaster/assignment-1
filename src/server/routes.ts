@@ -1,142 +1,166 @@
-import Router from 'koa-router'; 
+import Router from 'koa-router';
+import connectToMongo from './mongo';
+import { v4 as uuidv4 } from 'uuid';
 import { Book } from '../../adapter/assignment-2';
-import { v4 as uuidv4 } from 'uuid'; 
-import assignment2Functions from '../../adapter/assignment-2';
-
-const { createOrUpdateBook, removeBook, listBooks } = assignment2Functions;
 
 const router = new Router();
+const collectionName = 'books';
 
-//Create a book
+// Helper function to connect to mongodb and return the book collection
+async function getCollection() {
+  const db = await connectToMongo();
+  return db.collection<Book>(collectionName); 
+}
+
+// CREATE book
 router.post('/books', async (ctx) => {
-    try {
-        const { name, author, description, price, image } = ctx.request.body as Book 
-        //Validate user inputs
-         if(!name || !author || !description || !price || !image) {
-            ctx.status = 400;
-            return ctx.body = { error: 'All fields are required' };
-        }
-
-        //Extra validation for price
-        if(isNaN(price)  || price < 0) {
-            ctx.status = 400;
-            return ctx.body = { error: 'Price must be a positive number' }
-        }
-
-        const newBook: Book = {
-            id: uuidv4(), //I used uuids because we did in BDV102
-            name,
-            author,
-            description,
-            price: Number(price),
-            image
-        }
-
-        await createOrUpdateBook(newBook);
-        ctx.status = 201;
-        ctx.body = { message: 'New book created successfully', book: newBook };
-
-    } catch (error) {
-        ctx.status = 500;
-        console.error('An error occurred:', error);
-        ctx.body = { error: 'Server error, please try again' }
+  try {
+    //validate user inputs
+    const { name, author, description, price, image } = ctx.request.body as Book;
+    if (!name || !author || !description || !price || !image) {
+      ctx.status = 400;
+      ctx.body = { error: 'All fields are required' };
+      return;
     }
-})
+    // Extra validation for price
+    if (isNaN(price) || price < 0) {
+      ctx.status = 400;
+      ctx.body = { error: 'Price cannot be below 0' };
+      return;
+    }
 
+    const book: Book = {
+      id: uuidv4(),
+      name,
+      author,
+      description,
+      price: Number(price),
+      image,
+    };
+    //Await helper function and insert new book into db
+    const collection = await getCollection();
+    await collection.insertOne(book);
+    ctx.status = 201;
+    ctx.body = { message: 'Book created successfully', book };
+  } catch (error) {
+    console.error('POST error:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Server error' };
+  }
+});
 
-//Update a book
+// UPDATE book
 router.put('/books/:id', async (ctx) => {
-    try {
-        const { name, author, description, price, image } = ctx.request.body as Book;
-        //Validate user inputs
-         if(!name || !author || !description || !price || !image) {
-            ctx.status = 400;
-            return ctx.body = { error: 'All fields are required' };
-        }
-        
-        //Extra validation for price
-        if(isNaN(price)  || price < 0) {
-            ctx.status = 400;
-            return ctx.body = { error: 'Price must be a positive number' }
-        }
-      
-        //Validate id
-        const { id } = ctx.params;
-        if (!id) {
-            ctx.status = 400;
-            return ctx.body = { error: 'Book ID is required' };
-        }
+  try {
+    const { id } = ctx.params; // Book id from url
+    const { name, author, description, price, image } = ctx.request.body as Book;
 
-        const updatedBook: Book = {
-            id,
-            name,
-            author,
-            description,
-            price: Number(price),
-            image,
-        };
-
-        await createOrUpdateBook(updatedBook);
-        ctx.status = 200;
-        ctx.body = { message: 'Book updated successfully', book: updatedBook };
-
-    } catch (error) {
-        ctx.status = 500;
-        console.error('An error occurred:', error);
-        ctx.body = { error: 'Server error, please try again' };
+    if (!name || !author || !description || !price || !image) {
+      ctx.status = 400;
+      ctx.body = { error: 'All fields are required' };
+      return;
     }
+
+    if (isNaN(price) || price < 0) {
+      ctx.status = 400;
+      ctx.body = { error: 'Price cannot be below 0' };
+      return;
+    }
+
+    const updatedBook: Book = {
+      id,
+      name,
+      author,
+      description,
+      price: Number(price),
+      image,
+    };
+    // Await helper function and update book in db
+    const collection = await getCollection();
+    const result = await collection.updateOne({ id }, { $set: updatedBook });
+
+    // If no book was matched for the given ID
+    if (result.matchedCount === 0) {
+      ctx.status = 404;
+      ctx.body = { error: 'Book not found' };
+      return;
+    }
+
+    ctx.body = { message: 'Book updated successfully', book: updatedBook };
+  } catch (error) {
+    console.error('PUT error:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Server error' };
+  }
 });
 
-//Delete a book
+
+// DELETE book
 router.delete('/books/:id', async (ctx) => {
-    try {
-        const { id } = ctx.params;
-        if (!id) {
-            ctx.status = 400;
-            return ctx.body = { error: 'Book ID is required' };
-        }
-
-        await removeBook(id);
-        ctx.status = 200;
-        ctx.body = { message: 'Book deleted successfully' };
-
-    } catch (error) {
-        ctx.status = 500;
-        console.error('An error occurred:', error);
-        ctx.body = { error: 'Server error, please try again' };
+  try {
+    // Validate id
+    const { id } = ctx.params;
+    if (!id) {
+      ctx.status = 400;
+      ctx.body = { error: 'Book ID is required' };
+      return;
     }
+    // Await helper function and delete book from db
+    const collection = await getCollection();
+    const result = await collection.deleteOne({ id });
+
+    if (result.deletedCount === 0) {
+      ctx.status = 404;
+      ctx.body = { error: 'Book not found' };
+      return;
+    }
+
+    ctx.body = { message: 'Book deleted successfully' };
+  } catch (error) {
+    console.error('DELETE error:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Server error' };
+  }
 });
 
-//Read
+// READ books
 router.get('/books', async (ctx) => {
-    const filters = ctx.query.filters as Array<{ from?: number, to?: number }> | undefined;
+  try {
+    const { from, to } = ctx.query;
 
-    try {
-        // Validate filters if used
-        if (filters && filters.length > 0) {
-            const isValid = filters.every(filter => {
-                const from = filter.from;
-                const to = filter.to;
-                return (
-                    (from === undefined || !isNaN(Number(from))) &&
-                    (to === undefined || !isNaN(Number(to)))
-                );
-            });
-            // If user tries NaN input
-            if (!isValid) {
-                ctx.status = 400;
-                ctx.body = { error: "Invalid filters: 'from' and 'to' must be valid numbers." };
-                return;
-            }
-        }
-
-        const filteredBooks = await listBooks(filters)
-        ctx.body = filteredBooks;
-    } catch (error) {
-        ctx.status = 500;
-        console.error('An error occurred:', error);
-        ctx.body = { error: 'Server error, please try again' };
+    // Convert query params to numbers if they exist
+    const filters: { from?: number; to?: number }[] = [];
+    if (from || to) {
+      filters.push({
+        from: from ? parseFloat(from as string) : undefined,
+        to: to ? parseFloat(to as string) : undefined,
+      });
     }
+
+    // Make a filter for mongodb query
+    const mongoFilter: any = {};
+    if (filters.length > 0) {
+      const orConditions = filters.map(f => {
+        const range: any = {};
+        if (f.from !== undefined) range.$gte = f.from;
+        if (f.to !== undefined) range.$lte = f.to;
+        return { price: range };
+      });
+
+      mongoFilter.$or = orConditions;
+    }
+
+    // Fetch books from mongodb based on the filter
+    const collection = await getCollection();
+    const books = await collection.find(mongoFilter).toArray();
+
+    ctx.body = books;
+  } catch (error) {
+    console.error('GET error:', error);
+    ctx.status = 500;
+    ctx.body = { error: 'Server error' };
+  }
 });
 
 export default router;
+
