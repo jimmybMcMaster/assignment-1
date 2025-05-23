@@ -8,7 +8,6 @@ async function connectToMongo() {
     await client.connect();
     console.log("Connected successfully to MongoDB");
     return client.db("bookstore");
-    
   } catch (error) {
     console.error("MongoDB connection failed:", error);
     throw error;
