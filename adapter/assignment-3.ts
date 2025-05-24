@@ -1,4 +1,4 @@
-import previous_assignment from "./assignment-2";
+/* import previous_assignment from "./assignment-2";
 
 export type BookID = string;
 
@@ -39,4 +39,4 @@ export default {
   createOrUpdateBook,
   removeBook,
   listBooks,
-};
+}; */

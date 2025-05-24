@@ -1,4 +1,4 @@
-import previous_assignment from "./assignment-3";
+/* import previous_assignment from "./assignment-3";
 
 export type BookID = string;
 
@@ -88,4 +88,4 @@ export default {
   fulfilOrder,
   listOrders,
   lookupBookById,
-};
+}; */
