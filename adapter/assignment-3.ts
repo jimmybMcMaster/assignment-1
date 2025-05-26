@@ -1,4 +1,4 @@
-/* import previous_assignment from "./assignment-2";
+import previous_assignment from "./assignment-2";
 
 export type BookID = string;
 
@@ -11,6 +11,8 @@ export interface Book {
   image: string;
 }
 
+// If multiple filters are provided, any book that matches at least one of them should be returned
+// Within a single filter, a book would need to match all the given conditions
 export interface Filter {
   from?: number;
   to?: number;
@@ -18,13 +20,40 @@ export interface Filter {
   author?: string;
 }
 
-// If multiple filters are provided, any book that matches at least one of them should be returned
-// Within a single filter, a book would need to match all the given conditions
 async function listBooks(filters?: Filter[]): Promise<Book[]> {
-  throw new Error("Todo");
+  let url = "http://localhost:3000/books";
+
+  // If filters exist, append them to the URL
+  if (filters && filters.length > 0) {
+    const params = new URLSearchParams();
+
+    filters.forEach((filter) => {
+      if (filter.from !== undefined) {
+        params.append("from", String(filter.from));
+      }
+      if (filter.to !== undefined) {
+        params.append("to", String(filter.to));
+      }
+      if (filter.name) {
+        params.append("name", filter.name);
+      }
+      if (filter.author) {
+        params.append("author", filter.author);
+      }
+    });
+
+    url += `?${params.toString()}`;
+  }
+
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error("Failed to fetch books");
+  }
+
+  return (await response.json()) as Book[];
 }
 
-async function createOrUpdateBook(book: Book): Promise<BookID> {
+async function createOrUpdateBook(book: Book): Promise<Book> {
   return await previous_assignment.createOrUpdateBook(book);
 }
 
@@ -39,4 +68,4 @@ export default {
   createOrUpdateBook,
   removeBook,
   listBooks,
-}; */
+};

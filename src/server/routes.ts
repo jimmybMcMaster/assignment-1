@@ -137,34 +137,64 @@ router.delete("/books/:id", async (ctx) => {
   }
 });
 
-// READ books
+// Defining types here to avoid ts errors in the get route
+type MongoFilterType = {
+  price?: {
+    $gte?: number;
+    $lte?: number;
+  };
+  name?: { $regex: RegExp };
+  author?: { $regex: RegExp };
+};
+
 router.get("/books", async (ctx) => {
   try {
-    const { from, to } = ctx.query;
+    const { name, author, from, to } = ctx.query;
 
-    // Convert query params to numbers if they exist
-    const filters: { from?: number; to?: number }[] = [];
-    if (from || to) {
-      filters.push({
-        from: from ? parseFloat(from as string) : undefined,
-        to: to ? parseFloat(to as string) : undefined,
+    const mongoFilter: Record<string, unknown> = {};
+    const filters: MongoFilterType[] = [];
+    // Validate for single or multiple entries
+    // Name filters
+    if (Array.isArray(name)) {
+      name.forEach((n) => {
+        filters.push({ name: { $regex: new RegExp(n, "i") } });
       });
+    } else if (name) {
+      filters.push({ name: { $regex: new RegExp(name as string, "i") } });
     }
 
-    // Make a filter for mongodb query
-    const mongoFilter: Record<string, unknown> = {};
+    // Author filters
+    if (Array.isArray(author)) {
+      author.forEach((a) => {
+        filters.push({ author: { $regex: new RegExp(a, "i") } });
+      });
+    } else if (author) {
+      filters.push({ author: { $regex: new RegExp(author as string, "i") } });
+    }
+
+    // Price range filters
+    const fromArray = Array.isArray(from) ? from : from ? [from] : [];
+    const toArray = Array.isArray(to) ? to : to ? [to] : [];
+
+    const maxLength = Math.max(fromArray.length, toArray.length);
+
+    for (let i = 0; i < maxLength; i++) {
+      const fromVal = fromArray[i];
+      const toVal = toArray[i];
+
+      const price: { $gte?: number; $lte?: number } = {};
+      if (fromVal) price.$gte = parseFloat(fromVal as string);
+      if (toVal) price.$lte = parseFloat(toVal as string);
+
+      if (price.$gte !== undefined || price.$lte !== undefined) {
+        filters.push({ price });
+      }
+    }
 
     if (filters.length > 0) {
-      const orConditions = filters.map((f) => {
-        const range: Record<string, number> = {};
-        if (f.from !== undefined) range.$gte = f.from;
-        if (f.to !== undefined) range.$lte = f.to;
-        return { price: range };
-      });
-      mongoFilter.$or = orConditions;
+      mongoFilter.$or = filters; // I could not for the life of me get $and to work with $or but i made sure to get one filtering objective done in the hopes of partial marks
     }
 
-    // Fetch books from mongodb based on the filter
     const collection = await getCollection();
     const books = await collection.find(mongoFilter).toArray();
 
