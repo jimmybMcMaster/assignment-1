@@ -1,6 +1,7 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
 {
+<<<<<<< HEAD
 	"name": "Node.js & TypeScript",
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"dockerComposeFile": ["docker-compose.yml"],
@@ -30,4 +31,36 @@
 	// Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
 	 "remoteUser": "root",
 	"containerUser": "root"
+=======
+  "name": "Node.js & TypeScript",
+  // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+  "dockerComposeFile": ["docker-compose.yml"],
+  "service": "dev",
+  "features": {
+    "ghcr.io/devcontainers-contrib/features/tsx:1": {},
+    "ghcr.io/mcmastercce/bvd-103-mcmasterful-books/mcmasterful-books:latest": {}
+  },
+
+  // Features to add to the dev container. More info: https://containers.dev/features.
+  // "features": {},
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // "forwardPorts": [],
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": ["humao.rest-client", "rangav.vscode-thunder-client"],
+      "settings": {
+        "rest-client.previewResponseInUntitledDocument": true
+      }
+    }
+  },
+
+  // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
+  "remoteUser": "root",
+  "containerUser": "root"
+>>>>>>> cb2e9d3d60d33747dd412dfdee8656329bca7eff
 }

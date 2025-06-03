@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 version: "4.0"
 
 services:
@@ -9,3 +10,19 @@ services:
 
   mongo:
     image: mongo:latest
+=======
+version: "4.0"
+
+services:
+  dev:
+    image: mcr.microsoft.com/devcontainers/typescript-node:1-20-bookworm
+    user: root
+    volumes:
+      - ../..:/workspaces:cached
+    command: sleep infinity
+
+  mongo:
+    image: mongo:latest
+    ports:
+      - 27017:27017
+>>>>>>> cb2e9d3d60d33747dd412dfdee8656329bca7eff

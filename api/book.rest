@@ -1,0 +1,33 @@
+###
+GET http://localhost:3000/books
+
+###
+GET http://localhost:3000/books?filters[0][from]=20&filters[0][to]=40
+
+
+###
+POST http://localhost:3000/books
+Content-Type: application/json
+
+{
+  "name": "Jimmy Book",
+  "author": "Jimmy B",
+  "description": "A new book.",
+  "price": 39.99,
+  "image": "url"
+}
+
+###
+PUT http://localhost:3000/books/872296b5-69ee-4607-9b03-87e3a9169f37
+Content-Type: application/json
+
+{
+  "name": "Updated Jimmy book",
+  "author": "Jimmy B",
+  "description": "An updated book.",
+  "price": 49.99,
+  "image": "url"
+}
+
+###
+DELETE http://localhost:3000/books/872296b5-69ee-4607-9b03-87e3a9169f37
